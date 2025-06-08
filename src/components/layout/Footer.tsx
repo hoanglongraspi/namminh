@@ -1,9 +1,10 @@
 import React from 'react';
 import { 
-  Phone, Mail, MapPin, Clock, Facebook, Linkedin, Youtube, Send, Sparkles 
+  Phone, Mail, MapPin, Clock, Facebook, Linkedin, Youtube, Send 
 } from 'lucide-react';
 import Container from '../ui/Container';
 import Button from '../ui/Button';
+import LogoImage from '../ui/LogoImage';
 import { COMPANY_INFO, NAV_ITEMS, SITE_NAME } from '../../constants';
 
 const Footer: React.FC = () => {
@@ -26,17 +27,14 @@ const Footer: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
             {/* Company Info */}
             <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-teal-500 rounded-xl blur-md opacity-30"></div>
-                  <div className="relative w-10 h-10 bg-gradient-to-r from-blue-500 to-teal-500 rounded-xl flex items-center justify-center shadow-glow">
-                    <Sparkles className="w-5 h-5 text-white" />
-                  </div>
-                </div>
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-300 to-teal-300 bg-clip-text text-transparent">
-                  {SITE_NAME}
-                </h3>
-              </div>
+              <LogoImage 
+                size="lg" 
+                withGlow={true}
+                showText={true}
+                rounded={true}
+                variant="dark"
+                className="mb-4"
+              />
               
               <p className="text-gray-300 leading-relaxed">
                 Đối tác tin cậy trong lĩnh vực thiết bị y tế, mang đến giải pháp toàn diện cho sức khỏe cộng đồng.
@@ -44,56 +42,112 @@ const Footer: React.FC = () => {
               
               <ul className="space-y-4">
                 <li className="flex items-start group">
-                  <MapPin className="mr-3 h-5 w-5 text-blue-400 shrink-0 mt-0.5 group-hover:text-blue-300 transition-colors duration-300" />
+                  <MapPin className="mr-3 h-5 w-5 text-primary-400 shrink-0 mt-0.5 group-hover:text-primary-300 transition-colors duration-300" />
                   <span className="text-gray-300 group-hover:text-white transition-colors duration-300">{COMPANY_INFO.address}</span>
                 </li>
                 <li className="flex items-center group">
-                  <Phone className="mr-3 h-5 w-5 text-blue-400 group-hover:text-blue-300 transition-colors duration-300" />
-                  <span className="text-gray-300 group-hover:text-white transition-colors duration-300">{COMPANY_INFO.phone}</span>
-                </li>
-                <li className="flex items-center group">
-                  <Mail className="mr-3 h-5 w-5 text-blue-400 group-hover:text-blue-300 transition-colors duration-300" />
+                  <Mail className="mr-3 h-5 w-5 text-primary-400 group-hover:text-primary-300 transition-colors duration-300" />
                   <span className="text-gray-300 group-hover:text-white transition-colors duration-300">{COMPANY_INFO.email}</span>
                 </li>
                 <li className="flex items-center group">
-                  <Clock className="mr-3 h-5 w-5 text-blue-400 group-hover:text-blue-300 transition-colors duration-300" />
+                  <Clock className="mr-3 h-5 w-5 text-primary-400 group-hover:text-primary-300 transition-colors duration-300" />
                   <span className="text-gray-300 group-hover:text-white transition-colors duration-300">{COMPANY_INFO.workingHours}</span>
                 </li>
               </ul>
             </div>
 
-            {/* Quick Links */}
+            {/* Hotlines */}
             <div className="space-y-6">
-              <h3 className="text-xl font-bold text-white">Liên kết nhanh</h3>
-              <ul className="space-y-3">
-                {NAV_ITEMS.map((item) => (
-                  <li key={item.title}>
-                    <a
-                      href={item.href}
-                      className="text-gray-300 hover:text-blue-300 transition-all duration-300 hover:translate-x-1 inline-block"
-                    >
-                      {item.title}
-                    </a>
+              <h3 className="text-xl font-bold text-white">Hotlines</h3>
+              
+              {/* Product Consultation */}
+              <div className="space-y-3">
+                <h4 className="text-lg font-semibold text-primary-200">Tư vấn sản phẩm</h4>
+                <ul className="space-y-2">
+                  <li className="flex items-center group">
+                    <Phone className="mr-3 h-4 w-4 text-primary-400 group-hover:text-primary-300 transition-colors duration-300" />
+                    <div className="flex flex-col">
+                      <span className="text-gray-300 group-hover:text-white transition-colors duration-300">
+                        {COMPANY_INFO.hotlines.productConsultation.north.label}: {COMPANY_INFO.hotlines.productConsultation.north.number}
+                      </span>
+                      <span className="text-xs text-gray-400">({COMPANY_INFO.hotlines.productConsultation.north.contact})</span>
+                    </div>
                   </li>
-                ))}
-              </ul>
+                  <li className="flex items-center group">
+                    <Phone className="mr-3 h-4 w-4 text-primary-400 group-hover:text-primary-300 transition-colors duration-300" />
+                    <div className="flex flex-col">
+                      <span className="text-gray-300 group-hover:text-white transition-colors duration-300">
+                        {COMPANY_INFO.hotlines.productConsultation.south.label}: {COMPANY_INFO.hotlines.productConsultation.south.number}
+                      </span>
+                      <span className="text-xs text-gray-400">({COMPANY_INFO.hotlines.productConsultation.south.contact})</span>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Investment Consultation */}
+              <div className="space-y-3">
+                <h4 className="text-lg font-semibold text-primary-200">Tư vấn đầu tư</h4>
+                <ul className="space-y-2">
+                  <li className="flex items-center group">
+                    <Phone className="mr-3 h-4 w-4 text-primary-400 group-hover:text-primary-300 transition-colors duration-300" />
+                    <div className="flex flex-col">
+                      <span className="text-gray-300 group-hover:text-white transition-colors duration-300">
+                        {COMPANY_INFO.hotlines.investment.national.label}: {COMPANY_INFO.hotlines.investment.national.number}
+                      </span>
+                      <span className="text-xs text-gray-400">({COMPANY_INFO.hotlines.investment.national.contact})</span>
+                    </div>
+                  </li>
+                </ul>
+              </div>
             </div>
 
-            {/* Products */}
+            {/* Technical Support */}
             <div className="space-y-6">
-              <h3 className="text-xl font-bold text-white">Sản phẩm</h3>
+              <h3 className="text-xl font-bold text-white">Hỗ trợ kỹ thuật</h3>
               <ul className="space-y-3">
-                {NAV_ITEMS.find(item => item.title === "Sản phẩm")?.children?.map((product) => (
-                  <li key={product.title}>
-                    <a
-                      href={product.href}
-                      className="text-gray-300 hover:text-blue-300 transition-all duration-300 hover:translate-x-1 inline-block"
-                    >
-                      {product.title}
-                    </a>
-                  </li>
-                ))}
+                <li className="flex items-center group">
+                  <Phone className="mr-3 h-4 w-4 text-primary-400 group-hover:text-primary-300 transition-colors duration-300" />
+                  <div className="flex flex-col">
+                    <span className="text-gray-300 group-hover:text-white transition-colors duration-300">
+                      {COMPANY_INFO.hotlines.technicalSupport.north.label}: {COMPANY_INFO.hotlines.technicalSupport.north.number}
+                    </span>
+                  </div>
+                </li>
+                <li className="flex items-center group">
+                  <Phone className="mr-3 h-4 w-4 text-primary-400 group-hover:text-primary-300 transition-colors duration-300" />
+                  <div className="flex flex-col">
+                    <span className="text-gray-300 group-hover:text-white transition-colors duration-300">
+                      {COMPANY_INFO.hotlines.technicalSupport.south.label}: {COMPANY_INFO.hotlines.technicalSupport.south.number}
+                    </span>
+                  </div>
+                </li>
+                <li className="flex items-center group">
+                  <Phone className="mr-3 h-4 w-4 text-primary-400 group-hover:text-primary-300 transition-colors duration-300" />
+                  <div className="flex flex-col">
+                    <span className="text-gray-300 group-hover:text-white transition-colors duration-300">
+                      {COMPANY_INFO.hotlines.technicalSupport.national.label}: {COMPANY_INFO.hotlines.technicalSupport.national.number}
+                    </span>
+                  </div>
+                </li>
               </ul>
+
+              {/* Quick Links */}
+              <div className="mt-8">
+                <h4 className="text-lg font-semibold text-primary-200 mb-3">Liên kết nhanh</h4>
+                <ul className="space-y-2">
+                  {NAV_ITEMS.map((item) => (
+                    <li key={item.title}>
+                      <a
+                        href={item.href}
+                        className="text-gray-300 hover:text-primary-300 transition-all duration-300 hover:translate-x-1 inline-block text-sm"
+                      >
+                        {item.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
             {/* Newsletter */}

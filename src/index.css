@@ -3,6 +3,27 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Nam Minh Color Variables */
+  --namminh-blue: #0433c8;
+  --namminh-blue-light: #4f75ff;
+  --namminh-blue-dark: #032ba0;
+  --namminh-blue-darker: #022378;
+  
+  /* Nam Minh Primary Scale */
+  --namminh-primary-50: #f0f4ff;
+  --namminh-primary-100: #e0e8ff;
+  --namminh-primary-200: #c7d2fe;
+  --namminh-primary-300: #a5b4fc;
+  --namminh-primary-400: #818cf8;
+  --namminh-primary-500: #6366f1;
+  --namminh-primary-600: #4f46e5;
+  --namminh-primary-700: #0433c8;
+  --namminh-primary-800: #032ba0;
+  --namminh-primary-900: #022378;
+  --namminh-primary-950: #01183a;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -17,11 +38,11 @@
   }
 
   * {
-    @apply border-gray-200;
+    @apply border-neutral-200;
   }
 
   *:focus {
-    @apply outline-none ring-2 ring-blue-500 ring-offset-2;
+    @apply outline-none ring-2 ring-primary-700 ring-offset-2;
   }
 
   /* Performance optimizations */
@@ -45,12 +66,35 @@
 }
 
 @layer components {
+  .namminh-glass {
+    background: rgba(4, 51, 200, 0.1);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(4, 51, 200, 0.2);
+  }
+  
+  .namminh-glass-dark {
+    background: rgba(4, 51, 200, 0.05);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(4, 51, 200, 0.1);
+  }
+
   .glass {
     @apply bg-white/10 backdrop-blur-md border border-white/20;
   }
   
   .glass-dark {
     @apply bg-black/10 backdrop-blur-md border border-black/20;
+  }
+
+  .namminh-gradient {
+    background: linear-gradient(135deg, var(--namminh-blue) 0%, var(--namminh-blue-light) 100%);
+  }
+
+  .namminh-gradient-mesh {
+    background: linear-gradient(135deg, var(--namminh-blue) 0%, var(--namminh-blue-light) 50%, var(--namminh-blue-dark) 100%);
+    background-size: 400% 400%;
+    animation: namminhGradientShift 8s ease infinite;
+    will-change: background-position;
   }
 
   .gradient-mesh {
@@ -66,6 +110,14 @@
 
   .text-shadow-lg {
     text-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .namminh-text-shadow {
+    text-shadow: 0 2px 4px rgba(4, 51, 200, 0.1);
+  }
+
+  .namminh-text-shadow-lg {
+    text-shadow: 0 4px 8px rgba(4, 51, 200, 0.15);
   }
 
   .perspective-1000 {
@@ -85,7 +137,8 @@
       animation: none;
     }
     
-    .gradient-mesh {
+    .gradient-mesh,
+    .namminh-gradient-mesh {
       animation: none;
     }
 
@@ -113,6 +166,18 @@
   .animation-delay-500 {
     animation-delay: 500ms;
   }
+
+  .bg-namminh-blue {
+    background-color: var(--namminh-blue);
+  }
+
+  .text-namminh-blue {
+    color: var(--namminh-blue);
+  }
+
+  .border-namminh-blue {
+    border-color: var(--namminh-blue);
+  }
 }
 
 @keyframes gradientShift {
@@ -124,24 +189,119 @@
   }
 }
 
-/* Custom scrollbar */
+@keyframes namminhGradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Custom scrollbar with Nam Minh colors */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100;
+  @apply bg-neutral-100;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 rounded-full;
+  background-color: var(--namminh-blue);
+  @apply rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-400;
+  background-color: var(--namminh-blue-light);
 }
 
-/* Selection styles */
+/* Selection styles with Nam Minh colors */
 ::selection {
-  @apply bg-blue-100 text-blue-900;
+  background-color: var(--namminh-primary-100);
+  color: var(--namminh-blue-darker);
 }
+
+/* Nam Minh Button Styles */
+.btn-namminh-primary {
+  @apply bg-primary-700 hover:bg-primary-800 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+}
+
+.btn-namminh-secondary {
+  @apply bg-primary-100 hover:bg-primary-200 text-primary-700 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+}
+
+  .btn-namminh-outline {
+    @apply border-2 border-primary-700 text-primary-700 hover:bg-primary-700 hover:text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+
+  /* Nam Minh Logo-inspired styles */
+  .namminh-hero-text {
+    background: linear-gradient(135deg, #ffffff 0%, #e0e8ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+  }
+
+  .namminh-geometric-bg {
+    background: 
+      radial-gradient(circle at 20% 80%, rgba(4, 51, 200, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(79, 117, 255, 0.2) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, rgba(3, 43, 160, 0.1) 0%, transparent 50%),
+      linear-gradient(135deg, var(--namminh-blue) 0%, var(--namminh-blue-light) 100%);
+  }
+
+  .namminh-card-glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(4, 51, 200, 0.1);
+  }
+
+  .namminh-text-gradient {
+    background: linear-gradient(135deg, var(--namminh-blue) 0%, var(--namminh-blue-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Animated star element */
+  .namminh-star {
+    position: relative;
+    display: inline-block;
+  }
+
+  .namminh-star::before,
+  .namminh-star::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: currentColor;
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+
+  .namminh-star::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
+
+  /* Logo-inspired section divider */
+  .namminh-section-divider {
+    position: relative;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, var(--namminh-blue) 50%, transparent 100%);
+  }
+
+  .namminh-section-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    background: var(--namminh-blue);
+    transform: translate(-50%, -50%) rotate(45deg);
+  }

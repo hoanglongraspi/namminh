@@ -9,7 +9,11 @@ export interface Product {
   name: string;
   description: string;
   category: string;
+  brand: string;
+  price: string;
   imageUrl: string;
+  features: string[];
+  specifications: Record<string, string>;
   featured?: boolean;
 }
 

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, ChevronDown, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Menu, X, ChevronDown } from 'lucide-react';
 import { NavItem } from '../../types';
 import Container from '../ui/Container';
 import Button from '../ui/Button';
+import LogoImage from '../ui/LogoImage';
 import { SITE_NAME, NAV_ITEMS } from '../../constants';
 
 const Header: React.FC = () => {
@@ -53,13 +55,13 @@ const Header: React.FC = () => {
                   : 'bg-white/90 backdrop-blur-md border border-white/20 rounded-2xl shadow-large min-w-[220px] p-2'
               }`}>
                 {item.children.map((child) => (
-                  <a
+                  <Link
                     key={child.title}
-                    href={child.href}
+                    to={child.href}
                     className="block px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-xl transition-all duration-300"
                   >
                     {child.title}
-                  </a>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -68,15 +70,15 @@ const Header: React.FC = () => {
       }
 
       return (
-        <a
+        <Link
           key={item.title}
-          href={item.href}
+          to={item.href}
           className={`px-4 py-3 text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 rounded-xl hover:bg-blue-50/50 ${
             isMobile ? 'block hover:bg-blue-50' : ''
           }`}
         >
           {item.title}
-        </a>
+        </Link>
       );
     });
   };
@@ -92,26 +94,22 @@ const Header: React.FC = () => {
       <Container>
         <div className="flex items-center justify-between py-4">
           {/* Logo */}
-          <a href="/" className="flex items-center gap-3 group">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-teal-500 rounded-xl blur-md opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
-              <div className="relative w-10 h-10 bg-gradient-to-r from-blue-500 to-teal-500 rounded-xl flex items-center justify-center shadow-medium group-hover:shadow-glow transition-all duration-300 transform group-hover:scale-105">
-                <Sparkles className="w-5 h-5 text-white" />
-              </div>
-            </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent group-hover:from-blue-700 group-hover:to-teal-700 transition-all duration-300">
-              {SITE_NAME}
-            </span>
-          </a>
+          <LogoImage 
+            size="md" 
+            href="/" 
+            withGlow={true}
+            showText={true}
+            rounded={true}
+          />
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-2">
             {renderNavItems(NAV_ITEMS)}
-            <a href="#contact" className="ml-6">
+            <Link to="/contact" className="ml-6">
               <Button variant="gradient">
                 Liên hệ ngay
               </Button>
-            </a>
+            </Link>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -134,11 +132,11 @@ const Header: React.FC = () => {
           <div className="py-4 px-2 border-t border-gray-100 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl mt-4 backdrop-blur-sm">
             <nav className="flex flex-col space-y-2">
               {renderNavItems(NAV_ITEMS, true)}
-              <a href="#contact" className="mt-6 w-full block">
+              <Link to="/contact" className="mt-6 w-full block">
                 <Button variant="gradient" fullWidth>
                   Liên hệ ngay
                 </Button>
-              </a>
+              </Link>
             </nav>
           </div>
         </div>

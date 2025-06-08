@@ -1,178 +1,91 @@
-import React, { useState } from 'react';
-import { Search, Filter, Heart, ShoppingCart, Star, ArrowRight, Stethoscope, FlaskConical, Activity } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Filter, Heart, ShoppingCart, Star, ArrowRight, Stethoscope, FlaskConical, Activity, Eye, X, ChevronDown } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Container from '../components/ui/Container';
 import Button from '../components/ui/Button';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
+import { PRODUCTS } from '../constants';
 
 const ProductsPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedBrand, setSelectedBrand] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
+
+  // Scroll to top when filters change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [selectedCategory, selectedBrand]);
+
+  // Close filter panel when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (showFilterPanel && !target.closest('.filter-panel')) {
+        setShowFilterPanel(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showFilterPanel]);
   
-  const { elementRef: heroRef, isVisible: heroVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.2 });
-  const { elementRef: categoriesRef, isVisible: categoriesVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.2 });
-  const { elementRef: productsRef, isVisible: productsVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.2 });
+  const { elementRef: heroRef, isVisible: heroVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.1 });
+  const { elementRef: categoriesRef, isVisible: categoriesVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.1 });
+  const { elementRef: productsRef, isVisible: productsVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.1 });
+
+  // Auto-trigger animations after component mount
+  const [autoShowProducts, setAutoShowProducts] = useState(false);
+  const [autoShowCategories, setAutoShowCategories] = useState(false);
+
+  useEffect(() => {
+    // Show categories immediately
+    const categoriesTimer = setTimeout(() => setAutoShowCategories(true), 500);
+    // Show products shortly after
+    const productsTimer = setTimeout(() => setAutoShowProducts(true), 800);
+    
+    return () => {
+      clearTimeout(categoriesTimer);
+      clearTimeout(productsTimer);
+    };
+  }, []);
+
+  const shouldShowCategories = categoriesVisible || autoShowCategories;
+  const shouldShowProducts = productsVisible || autoShowProducts;
+
+
 
   const categories = [
     { id: 'all', name: 'Tất cả sản phẩm', icon: <Star className="w-5 h-5" /> },
     { id: 'medical-equipment', name: 'Thiết bị y tế', icon: <Stethoscope className="w-5 h-5" /> },
     { id: 'consumables', name: 'Vật tư tiêu hao', icon: <Activity className="w-5 h-5" /> },
-    { id: 'laboratory', name: 'Thiết bị phòng thí nghiệm', icon: <FlaskConical className="w-5 h-5" /> }
+    { id: 'lab-equipment', name: 'Thiết bị phòng thí nghiệm', icon: <FlaskConical className="w-5 h-5" /> }
   ];
 
-  const featuredProducts = [
-    {
-      id: 1,
-      name: 'Máy siêu âm 4D cao cấp',
-      category: 'Thiết bị chẩn đoán',
-      price: 'Liên hệ',
-      image: 'https://images.pexels.com/photos/4226119/pexels-photo-4226119.jpeg?auto=compress&cs=tinysrgb&w=600',
-      description: 'Máy siêu âm 4D với công nghệ hình ảnh tiên tiến',
-      rating: 4.8,
-      reviews: 24,
-      inStock: true,
-      badge: 'Bán chạy'
-    },
-    {
-      id: 2,
-      name: 'Găng tay y tế Nitrile',
-      category: 'Vật tư tiêu hao',
-      price: 'Liên hệ',
-      image: 'https://images.pexels.com/photos/4197567/pexels-photo-4197567.jpeg?auto=compress&cs=tinysrgb&w=600',
-      description: 'Găng tay y tế chất lượng cao, an toàn tuyệt đối',
-      rating: 4.9,
-      reviews: 156,
-      inStock: true
-    },
-    {
-      id: 3,
-      name: 'Kính hiển vi sinh học',
-      category: 'Thiết bị phòng thí nghiệm',
-      price: 'Liên hệ',
-      image: 'https://images.pexels.com/photos/8471813/pexels-photo-8471813.jpeg?auto=compress&cs=tinysrgb&w=600',
-      description: 'Kính hiển vi độ phân giải cao cho nghiên cứu',
-      rating: 4.7,
-      reviews: 89,
-      inStock: true,
-      badge: 'Mới'
-    }
+  // Get unique brands from products
+  const brands = [
+    { id: 'all', name: 'Tất cả thương hiệu' },
+    ...Array.from(new Set(PRODUCTS.map(product => product.brand)))
+      .map(brand => ({ id: brand.toLowerCase().replace(/\s+/g, '-'), name: brand }))
   ];
 
-  const products = [
-    // Medical Equipment
-    {
-      id: 1,
-      name: 'Máy siêu âm 4D Samsung HS70A',
-      category: 'medical-equipment',
-      price: 'Liên hệ',
-      image: 'https://images.pexels.com/photos/4386466/pexels-photo-4386466.jpeg?auto=compress&cs=tinysrgb&w=600',
-      description: 'Máy siêu âm chất lượng cao với công nghệ hình ảnh tiên tiến',
-      features: ['Màn hình LED full HD', 'Đầu dò đa tần số', 'Phần mềm chuyên dụng', 'Bảo hành 2 năm'],
-      rating: 4.8,
-      inStock: true
-    },
-    {
-      id: 2,
-      name: 'Máy X-quang Philips DigitalDiagnost C90',
-      category: 'medical-equipment',
-      price: 'Liên hệ',
-      image: 'https://images.pexels.com/photos/4226140/pexels-photo-4226140.jpeg?auto=compress&cs=tinysrgb&w=600',
-      description: 'Hệ thống X-quang kỹ thuật số thế hệ mới',
-      features: ['Chụp ảnh số', 'Giảm liều bức xạ', 'Chất lượng hình ảnh cao', 'Hỗ trợ PACS'],
-      rating: 4.9,
-      inStock: true
-    },
-    {
-      id: 3,
-      name: 'Máy thở Dräger V500',
-      category: 'medical-equipment',
-      price: 'Liên hệ',
-      image: 'https://images.pexels.com/photos/4386431/pexels-photo-4386431.jpeg?auto=compress&cs=tinysrgb&w=600',
-      description: 'Máy thở hiện đại cho phòng ICU và hồi sức',
-      features: ['Màn hình cảm ứng', 'Nhiều chế độ thở', 'Báo động thông minh', 'Dễ sử dụng'],
-      rating: 4.7,
-      inStock: true
-    },
-    // Consumables
-    {
-      id: 4,
-      name: 'Găng tay y tế Nitrile',
-      category: 'consumables',
-      price: 'Liên hệ',
-      image: 'https://images.pexels.com/photos/4386370/pexels-photo-4386370.jpeg?auto=compress&cs=tinysrgb&w=600',
-      description: 'Găng tay không bột, chống dị ứng',
-      features: ['100 chiếc/hộp', 'Không latex', 'Kháng hóa chất', 'CE Mark'],
-      rating: 4.6,
-      inStock: true
-    },
-    {
-      id: 5,
-      name: 'Kim tiêm 3 phần BD',
-      category: 'consumables',
-      price: 'Liên hệ',
-      image: 'https://images.pexels.com/photos/6823567/pexels-photo-6823567.jpeg?auto=compress&cs=tinysrgb&w=600',
-      description: 'Kim tiêm an toàn, sử dụng một lần',
-      features: ['Kim sắc bén', 'Bao bì vô trùng', 'Nhiều kích cỡ', '100 chiếc/hộp'],
-      rating: 4.5,
-      inStock: true
-    },
-    {
-      id: 6,
-      name: 'Khẩu trang y tế 4 lớp',
-      category: 'consumables',
-      price: 'Liên hệ',
-      image: 'https://images.pexels.com/photos/4386398/pexels-photo-4386398.jpeg?auto=compress&cs=tinysrgb&w=600',
-      description: 'Khẩu trang bảo vệ cao cấp',
-      features: ['Lọc 95% vi khuẩn', 'Thoáng khí', 'Dây đeo êm ái', '50 chiếc/hộp'],
-      rating: 4.4,
-      inStock: true
-    },
-    // Laboratory Equipment
-    {
-      id: 7,
-      name: 'Kính hiển vi Olympus CX23',
-      category: 'laboratory',
-      price: 'Liên hệ',
-      image: 'https://images.pexels.com/photos/2280549/pexels-photo-2280549.jpeg?auto=compress&cs=tinysrgb&w=600',
-      description: 'Kính hiển vi quang học chuyên nghiệp',
-      features: ['Phóng đại 1000x', 'LED chiếu sáng', 'Quang học chất lượng cao', 'Thiết kế ergonomic'],
-      rating: 4.8,
-      inStock: true
-    },
-    {
-      id: 8,
-      name: 'Máy ly tâm Hettich EBA 200',
-      category: 'laboratory',
-      price: 'Liên hệ',
-      image: 'https://images.pexels.com/photos/2280568/pexels-photo-2280568.jpeg?auto=compress&cs=tinysrgb&w=600',
-      description: 'Máy ly tâm tốc độ cao cho phòng thí nghiệm',
-      features: ['Tốc độ 6000 rpm', 'Động cơ brushless', 'An toàn cao', 'Dễ bảo trì'],
-      rating: 4.7,
-      inStock: true
-    },
-    {
-      id: 9,
-      name: 'Tủ ấm CO2 Thermo Scientific',
-      category: 'laboratory',
-      price: 'Liên hệ',
-      image: 'https://images.pexels.com/photos/2280571/pexels-photo-2280571.jpeg?auto=compress&cs=tinysrgb&w=600',
-      description: 'Tủ ấm CO2 cho nuôi cấy tế bào',
-      features: ['Kiểm soát CO2 chính xác', 'Khử trùng tự động', 'Cảm biến nhiệt độ', 'Dung tích 180L'],
-      rating: 4.9,
-      inStock: true
-    }
-  ];
+  const featuredProducts = PRODUCTS.filter(product => product.featured);
 
-  const filteredProducts = products.filter(product => {
+  const filteredProducts = PRODUCTS.filter(product => {
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+    const matchesBrand = selectedBrand === 'all' || product.brand.toLowerCase().replace(/\s+/g, '-') === selectedBrand;
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.description.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
+                         product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.brand.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesCategory && matchesBrand && matchesSearch;
   });
+
+
 
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative py-32 bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-700 text-white overflow-hidden">
+      <section className="relative py-16 bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-700 text-white overflow-hidden">
         <div className="absolute inset-0 opacity-20">
           <div className="absolute inset-0" style={{
             backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255,255,255,0.1) 1px, transparent 0)`,
@@ -217,12 +130,12 @@ const ProductsPage: React.FC = () => {
       </section>
 
       {/* Category Filter */}
-      <section className="py-12 bg-white border-b border-gray-100">
+      <section className="py-6 bg-white border-b border-gray-100">
         <Container>
           <div 
             ref={categoriesRef}
-            className={`transition-all duration-1000 ${
-              categoriesVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            className={`transition-all duration-700 ${
+              shouldShowCategories ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}
           >
             <div className="flex flex-wrap justify-center gap-4">
@@ -230,12 +143,14 @@ const ProductsPage: React.FC = () => {
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-semibold transition-all duration-300 ${
+                  className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-semibold transition-all duration-500 transform ${
                     selectedCategory === category.id
                       ? 'bg-gradient-to-r from-blue-500 to-teal-500 text-white shadow-glow'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 hover:scale-105'
+                  } ${
+                    shouldShowCategories ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                   }`}
-                  style={{ transitionDelay: categoriesVisible ? `${index * 100}ms` : '0ms' }}
+                  style={{ transitionDelay: shouldShowCategories ? `${index * 150}ms` : '0ms' }}
                 >
                   {category.icon}
                   <span>{category.name}</span>
@@ -247,12 +162,12 @@ const ProductsPage: React.FC = () => {
       </section>
 
       {/* Products Grid */}
-      <section className="py-20 bg-gradient-to-b from-white to-gray-50">
+      <section className="py-12 bg-gradient-to-b from-white to-gray-50">
         <Container>
           <div 
             ref={productsRef}
-            className={`transition-all duration-1000 ${
-              productsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            className={`transition-all duration-700 ${
+              shouldShowProducts ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
             }`}
           >
             <div className="flex items-center justify-between mb-12">
@@ -262,24 +177,99 @@ const ProductsPage: React.FC = () => {
                 </h2>
                 <p className="text-gray-600">
                   Tìm thấy {filteredProducts.length} sản phẩm
+                  {selectedBrand !== 'all' && (
+                    <span className="ml-2">
+                      • Thương hiệu: <strong>{brands.find(b => b.id === selectedBrand)?.name}</strong>
+                    </span>
+                  )}
                 </p>
               </div>
               
-              <Button variant="outline" icon={<Filter className="w-4 h-4" />}>
-                Bộ lọc
-              </Button>
+              <div className="relative filter-panel">
+                <Button 
+                  variant="outline" 
+                  icon={<Filter className="w-4 h-4" />}
+                  onClick={() => setShowFilterPanel(!showFilterPanel)}
+                  className={`relative ${showFilterPanel ? 'bg-blue-50 border-blue-200' : ''}`}
+                >
+                  Bộ lọc
+                  <ChevronDown className={`w-4 h-4 ml-1 transition-transform duration-200 ${showFilterPanel ? 'rotate-180' : ''}`} />
+                  {(selectedBrand !== 'all') && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-600 rounded-full"></div>
+                  )}
+                </Button>
+
+                {/* Filter Panel */}
+                {showFilterPanel && (
+                  <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden">
+                    <div className="p-6">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-lg font-semibold text-gray-900">Bộ lọc sản phẩm</h3>
+                        <button 
+                          onClick={() => setShowFilterPanel(false)}
+                          className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                          <X className="w-4 h-4 text-gray-500" />
+                        </button>
+                      </div>
+
+                      {/* Brand Filter */}
+                      <div className="mb-6">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-3">Thương hiệu</h4>
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                          {brands.map((brand) => (
+                            <label
+                              key={brand.id}
+                              className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+                            >
+                              <input
+                                type="radio"
+                                name="brand"
+                                value={brand.id}
+                                checked={selectedBrand === brand.id}
+                                onChange={(e) => setSelectedBrand(e.target.value)}
+                                className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                              />
+                              <span className="text-sm text-gray-700">{brand.name}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Clear Filters */}
+                      <div className="pt-4 border-t border-gray-200">
+                        <button
+                          onClick={() => {
+                            setSelectedBrand('all');
+                            setShowFilterPanel(false);
+                          }}
+                          className="w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
+                        >
+                          Xóa bộ lọc
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
+
+
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredProducts.map((product, index) => (
                 <div 
                   key={product.id}
-                  className="group bg-white rounded-2xl overflow-hidden shadow-soft hover:shadow-large transition-all duration-500 transform hover:-translate-y-2"
-                  style={{ transitionDelay: productsVisible ? `${index * 100}ms` : '0ms' }}
+                  className={`group bg-white rounded-2xl overflow-hidden shadow-soft hover:shadow-large transition-all duration-600 transform hover:-translate-y-2 ${
+                    shouldShowProducts ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                  }`}
+                  style={{ 
+                    transitionDelay: shouldShowProducts ? `${index * 120}ms` : '0ms'
+                  }}
                 >
                   <div className="relative overflow-hidden">
                     <img 
-                      src={product.image} 
+                      src={product.imageUrl} 
                       alt={product.name}
                       className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
                       loading="lazy"
@@ -295,35 +285,26 @@ const ProductsPage: React.FC = () => {
                       </button>
                     </div>
 
-                    {/* Stock status */}
-                    <div className="absolute top-4 left-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        product.inStock 
-                          ? 'bg-teal-100 text-teal-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {product.inStock ? 'Có sẵn' : 'Hết hàng'}
-                      </span>
-                    </div>
+                    {/* Featured badge */}
+                    {product.featured && (
+                      <div className="absolute top-4 left-4">
+                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-500 to-teal-500 text-white">
+                          Nổi bật
+                        </span>
+                      </div>
+                    )}
 
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
                   
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star 
-                            key={i} 
-                            className={`w-4 h-4 ${
-                              i < Math.floor(product.rating) 
-                                ? 'text-yellow-400 fill-current' 
-                                : 'text-gray-300'
-                            }`} 
-                          />
-                        ))}
-                        <span className="text-sm text-gray-600 ml-1">({product.rating})</span>
-                      </div>
+                      <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-md">
+                        {product.brand}
+                      </span>
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
+                        {categories.find(cat => cat.id === product.category)?.name || product.category}
+                      </span>
                     </div>
                     
                     <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-700 transition-colors duration-300">
@@ -334,31 +315,32 @@ const ProductsPage: React.FC = () => {
                       {product.description}
                     </p>
 
-                    <div className="mb-4">
-                      <div className="text-sm text-gray-500 mb-2">Tính năng nổi bật:</div>
-                      <ul className="space-y-1">
-                        {product.features.slice(0, 2).map((feature, i) => (
-                          <li key={i} className="text-xs text-gray-600 flex items-center gap-1">
-                            <div className="w-1 h-1 bg-blue-500 rounded-full"></div>
-                            {feature}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                    {product.features && (
+                      <div className="mb-4">
+                        <div className="text-sm text-gray-500 mb-2">Tính năng nổi bật:</div>
+                        <ul className="space-y-1">
+                          {product.features.slice(0, 2).map((feature, i) => (
+                            <li key={i} className="text-xs text-gray-600 flex items-center gap-1">
+                              <div className="w-1 h-1 bg-blue-500 rounded-full"></div>
+                              {feature}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                     
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="text-2xl font-bold text-blue-600">{product.price}</div>
+                        <div className="text-2xl font-bold text-blue-600">{product.price || 'Liên hệ'}</div>
                       </div>
                       
-                      <Button 
-                        variant="primary" 
-                        size="sm"
-                        icon={<ArrowRight className="w-4 h-4" />}
-                        className="shrink-0"
+                      <Link 
+                        to={`/products/${product.id}`}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-300"
                       >
+                        <Eye className="w-4 h-4" />
                         Chi tiết
-                      </Button>
+                      </Link>
                     </div>
                   </div>
                 </div>
