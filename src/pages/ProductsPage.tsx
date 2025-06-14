@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Heart, ShoppingCart, Star, ArrowRight, Stethoscope, FlaskConical, Activity, Eye, X, ChevronDown } from 'lucide-react';
+import { Search, Filter, Heart, ShoppingCart, Star, ArrowRight, Stethoscope, FlaskConical, Activity, Eye, X, ChevronDown, Package, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Container from '../components/ui/Container';
 import Button from '../components/ui/Button';
+import Card from '../components/ui/Card';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
-import { PRODUCTS } from '../constants';
+import { useProducts, LandingProduct } from '../hooks/useProducts';
 
 const ProductsPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedBrand, setSelectedBrand] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilterPanel, setShowFilterPanel] = useState(false);
+
+  // Use CMS data instead of hardcoded constants
+  const { products: allProducts, loading, error } = useProducts();
 
   // Scroll to top when filters change
   useEffect(() => {
@@ -53,8 +57,6 @@ const ProductsPage: React.FC = () => {
   const shouldShowCategories = categoriesVisible || autoShowCategories;
   const shouldShowProducts = productsVisible || autoShowProducts;
 
-
-
   const categories = [
     { id: 'all', name: 'Tất cả sản phẩm', icon: <Star className="w-5 h-5" /> },
     { id: 'medical-equipment', name: 'Thiết bị y tế', icon: <Stethoscope className="w-5 h-5" /> },
@@ -62,25 +64,77 @@ const ProductsPage: React.FC = () => {
     { id: 'lab-equipment', name: 'Thiết bị phòng thí nghiệm', icon: <FlaskConical className="w-5 h-5" /> }
   ];
 
-  // Get unique brands from products
+  // Get unique categories from CMS data
+  const availableCategories = Array.from(new Set(allProducts.map(product => product.category))).filter(Boolean);
+
+  // Get unique brands from CMS data (if brand exists in specifications)
   const brands = [
     { id: 'all', name: 'Tất cả thương hiệu' },
-    ...Array.from(new Set(PRODUCTS.map(product => product.brand)))
-      .map(brand => ({ id: brand.toLowerCase().replace(/\s+/g, '-'), name: brand }))
+    ...Array.from(new Set(
+      allProducts
+        .map(product => product.specifications.brand || product.specifications.Brand || product.specifications.Thương_hiệu)
+        .filter(Boolean)
+    )).map(brand => ({ id: brand.toLowerCase().replace(/\s+/g, '-'), name: brand }))
   ];
 
-  const featuredProducts = PRODUCTS.filter(product => product.featured);
-
-  const filteredProducts = PRODUCTS.filter(product => {
+  const filteredProducts = allProducts.filter(product => {
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
-    const matchesBrand = selectedBrand === 'all' || product.brand.toLowerCase().replace(/\s+/g, '-') === selectedBrand;
+    const productBrand = product.specifications.brand || product.specifications.Brand || product.specifications.Thương_hiệu || '';
+    const matchesBrand = selectedBrand === 'all' || productBrand.toLowerCase().replace(/\s+/g, '-') === selectedBrand;
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.brand.toLowerCase().includes(searchTerm.toLowerCase());
+                         productBrand.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesBrand && matchesSearch;
   });
 
+  // Loading skeleton component
+  const LoadingSkeleton = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+        <Card key={i} className="h-full">
+          <div className="animate-pulse">
+            <div className="h-48 bg-gray-200 rounded-t-lg"></div>
+            <div className="p-4 space-y-3">
+              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div className="space-y-2">
+                <div className="h-3 bg-gray-200 rounded"></div>
+                <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+              </div>
+              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
 
+  // Error state component
+  const ErrorState = () => (
+    <div className="text-center py-12">
+      <div className="bg-red-50 rounded-lg p-8 max-w-md mx-auto">
+        <h3 className="text-lg font-semibold text-red-800 mb-2">Không thể tải sản phẩm</h3>
+        <p className="text-red-600 text-sm mb-4">{error}</p>
+        <Button 
+          onClick={() => window.location.reload()} 
+          variant="outline"
+          className="text-red-600 border-red-200 hover:bg-red-50"
+        >
+          Thử lại
+        </Button>
+      </div>
+    </div>
+  );
+
+  // Empty state component
+  const EmptyState = () => (
+    <div className="text-center py-12">
+      <div className="bg-gray-50 rounded-lg p-8 max-w-md mx-auto">
+        <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Chưa có sản phẩm nào</h3>
+        <p className="text-gray-600 text-sm">Các sản phẩm sẽ được hiển thị tại đây khi có sẵn.</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen">
@@ -176,8 +230,8 @@ const ProductsPage: React.FC = () => {
                   {categories.find(cat => cat.id === selectedCategory)?.name || 'Sản phẩm'}
                 </h2>
                 <p className="text-gray-600">
-                  Tìm thấy {filteredProducts.length} sản phẩm
-                  {selectedBrand !== 'all' && (
+                  {loading ? 'Đang tải...' : `Tìm thấy ${filteredProducts.length} sản phẩm`}
+                  {selectedBrand !== 'all' && !loading && (
                     <span className="ml-2">
                       • Thương hiệu: <strong>{brands.find(b => b.id === selectedBrand)?.name}</strong>
                     </span>
@@ -185,206 +239,164 @@ const ProductsPage: React.FC = () => {
                 </p>
               </div>
               
-              <div className="relative filter-panel">
-                <Button 
-                  variant="outline" 
-                  icon={<Filter className="w-4 h-4" />}
-                  onClick={() => setShowFilterPanel(!showFilterPanel)}
-                  className={`relative ${showFilterPanel ? 'bg-blue-50 border-blue-200' : ''}`}
-                >
-                  Bộ lọc
-                  <ChevronDown className={`w-4 h-4 ml-1 transition-transform duration-200 ${showFilterPanel ? 'rotate-180' : ''}`} />
-                  {(selectedBrand !== 'all') && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-600 rounded-full"></div>
-                  )}
-                </Button>
+              {brands.length > 1 && (
+                <div className="relative filter-panel">
+                  <Button 
+                    variant="outline" 
+                    icon={<Filter className="w-4 h-4" />}
+                    onClick={() => setShowFilterPanel(!showFilterPanel)}
+                    className={`relative ${showFilterPanel ? 'bg-blue-50 border-blue-200' : ''}`}
+                  >
+                    Bộ lọc
+                    <ChevronDown className={`w-4 h-4 ml-1 transition-transform duration-200 ${showFilterPanel ? 'rotate-180' : ''}`} />
+                    {(selectedBrand !== 'all') && (
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-600 rounded-full"></div>
+                    )}
+                  </Button>
 
-                {/* Filter Panel */}
-                {showFilterPanel && (
-                  <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden">
-                    <div className="p-6">
-                      <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-semibold text-gray-900">Bộ lọc sản phẩm</h3>
-                        <button 
-                          onClick={() => setShowFilterPanel(false)}
-                          className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
-                        >
-                          <X className="w-4 h-4 text-gray-500" />
-                        </button>
-                      </div>
-
-                      {/* Brand Filter */}
-                      <div className="mb-6">
-                        <h4 className="text-sm font-semibold text-gray-700 mb-3">Thương hiệu</h4>
-                        <div className="space-y-2 max-h-48 overflow-y-auto">
-                          {brands.map((brand) => (
-                            <label
-                              key={brand.id}
-                              className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
-                            >
-                              <input
-                                type="radio"
-                                name="brand"
-                                value={brand.id}
-                                checked={selectedBrand === brand.id}
-                                onChange={(e) => setSelectedBrand(e.target.value)}
-                                className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                              />
-                              <span className="text-sm text-gray-700">{brand.name}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Clear Filters */}
-                      <div className="pt-4 border-t border-gray-200">
+                  {showFilterPanel && (
+                    <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 p-4 z-50">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-gray-900">Bộ lọc sản phẩm</h3>
                         <button
-                          onClick={() => {
-                            setSelectedBrand('all');
-                            setShowFilterPanel(false);
-                          }}
-                          className="w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
+                          onClick={() => setShowFilterPanel(false)}
+                          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
                         >
-                          Xóa bộ lọc
+                          <X className="w-4 h-4" />
                         </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredProducts.map((product, index) => (
-                <div 
-                  key={product.id}
-                  className={`group bg-white rounded-2xl overflow-hidden shadow-soft hover:shadow-large transition-all duration-600 transform hover:-translate-y-2 ${
-                    shouldShowProducts ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-                  }`}
-                  style={{ 
-                    transitionDelay: shouldShowProducts ? `${index * 120}ms` : '0ms'
-                  }}
-                >
-                  <div className="relative overflow-hidden">
-                    <img 
-                      src={product.imageUrl} 
-                      alt={product.name}
-                      className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
-                      loading="lazy"
-                    />
-                    
-                    {/* Product actions */}
-                    <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <button className="p-2 bg-white/90 backdrop-blur-sm rounded-xl hover:bg-white shadow-soft">
-                        <Heart className="w-4 h-4 text-gray-600" />
-                      </button>
-                      <button className="p-2 bg-white/90 backdrop-blur-sm rounded-xl hover:bg-white shadow-soft">
-                        <ShoppingCart className="w-4 h-4 text-gray-600" />
-                      </button>
-                    </div>
-
-                    {/* Featured badge */}
-                    {product.featured && (
-                      <div className="absolute top-4 left-4">
-                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-500 to-teal-500 text-white">
-                          Nổi bật
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  </div>
-                  
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-md">
-                        {product.brand}
-                      </span>
-                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
-                        {categories.find(cat => cat.id === product.category)?.name || product.category}
-                      </span>
-                    </div>
-                    
-                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-700 transition-colors duration-300">
-                      {product.name}
-                    </h3>
-                    
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                      {product.description}
-                    </p>
-
-                    {product.features && (
-                      <div className="mb-4">
-                        <div className="text-sm text-gray-500 mb-2">Tính năng nổi bật:</div>
-                        <ul className="space-y-1">
-                          {product.features.slice(0, 2).map((feature, i) => (
-                            <li key={i} className="text-xs text-gray-600 flex items-center gap-1">
-                              <div className="w-1 h-1 bg-blue-500 rounded-full"></div>
-                              {feature}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-2xl font-bold text-blue-600">{product.price || 'Liên hệ'}</div>
                       </div>
                       
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Thương hiệu
+                          </label>
+                          <select
+                            value={selectedBrand}
+                            onChange={(e) => setSelectedBrand(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          >
+                            {brands.map(brand => (
+                              <option key={brand.id} value={brand.id}>
+                                {brand.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        
+                        <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                          <button
+                            onClick={() => {
+                              setSelectedBrand('all');
+                              setSelectedCategory('all');
+                              setSearchTerm('');
+                            }}
+                            className="text-gray-500 hover:text-gray-700 text-sm font-medium transition-colors"
+                          >
+                            Xóa bộ lọc
+                          </button>
+                          <Button
+                            onClick={() => setShowFilterPanel(false)}
+                            size="sm"
+                            className="px-6"
+                          >
+                            Áp dụng
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Product Grid Content */}
+            {error ? (
+              <ErrorState />
+            ) : loading ? (
+              <LoadingSkeleton />
+            ) : filteredProducts.length === 0 && allProducts.length === 0 ? (
+              <EmptyState />
+            ) : filteredProducts.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="bg-gray-50 rounded-lg p-8 max-w-md mx-auto">
+                  <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Không tìm thấy sản phẩm</h3>
+                  <p className="text-gray-600 text-sm mb-4">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.</p>
+                  <Button 
+                    onClick={() => {
+                      setSelectedBrand('all');
+                      setSelectedCategory('all');
+                      setSearchTerm('');
+                    }}
+                    variant="outline"
+                  >
+                    Xóa bộ lọc
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredProducts.map((product, index) => (
+                  <Card 
+                    key={product.id} 
+                    hover 
+                    className={`h-full flex flex-col transition-all duration-700 ${
+                      shouldShowProducts ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+                    }`}
+                    style={{ transitionDelay: shouldShowProducts ? `${index * 100}ms` : '0ms' }}
+                  >
+                    <div className="relative h-48 w-full overflow-hidden">
+                      {product.image_url ? (
+                        <img 
+                          src={product.image_url} 
+                          alt={product.name} 
+                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105" 
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                          <Package className="h-12 w-12 text-gray-400" />
+                        </div>
+                      )}
+                      <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded">
+                        {product.category}
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 flex-grow flex flex-col">
+                      <h3 className="text-lg font-semibold mb-2 line-clamp-2">{product.name}</h3>
+                      <p className="text-gray-600 text-sm mb-4 flex-grow line-clamp-3">{product.description}</p>
+                      
+                      {/* Features */}
+                      {product.features && product.features.length > 0 && (
+                        <div className="mb-4">
+                          <div className="flex flex-wrap gap-1">
+                            {product.features.slice(0, 2).map((feature, featureIndex) => (
+                              <span 
+                                key={featureIndex}
+                                className="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded"
+                              >
+                                {feature}
+                              </span>
+                            ))}
+                            {product.features.length > 2 && (
+                              <span className="text-xs text-gray-500">+{product.features.length - 2} more</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
                       <Link 
-                        to={`/products/${product.id}`}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-300"
+                        to={`/products/${product.slug}`} 
+                        className="text-blue-600 font-medium flex items-center hover:underline mt-auto"
                       >
-                        <Eye className="w-4 h-4" />
-                        Chi tiết
+                        Xem chi tiết <ArrowRight size={16} className="ml-1" />
                       </Link>
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {filteredProducts.length === 0 && (
-              <div className="text-center py-20">
-                <div className="text-gray-400 mb-4">
-                  <Search className="w-16 h-16 mx-auto" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Không tìm thấy sản phẩm
-                </h3>
-                <p className="text-gray-600">
-                  Thử thay đổi từ khóa tìm kiếm hoặc chọn danh mục khác
-                </p>
+                  </Card>
+                ))}
               </div>
             )}
-          </div>
-        </Container>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-700 text-white">
-        <Container>
-          <div className="text-center max-w-4xl mx-auto">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Cần tư vấn <span className="bg-gradient-to-r from-yellow-300 to-teal-300 bg-clip-text text-transparent">sản phẩm?</span>
-            </h2>
-            
-            <p className="text-xl opacity-90 mb-8 leading-relaxed">
-              Đội ngũ chuyên gia của chúng tôi sẵn sàng tư vấn và hỗ trợ bạn 
-              chọn lựa sản phẩm phù hợp nhất với nhu cầu.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="gradient" size="xl" className="font-bold">
-                Liên hệ tư vấn
-              </Button>
-              <Button variant="outline" size="xl" className="border-white/30 bg-white/5 backdrop-blur-sm hover:bg-white/10 text-white">
-                Tải catalog
-              </Button>
-            </div>
           </div>
         </Container>
       </section>

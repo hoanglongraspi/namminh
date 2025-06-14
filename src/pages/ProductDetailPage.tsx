@@ -1,32 +1,139 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ShoppingCart, Heart, Share2, Check, Star, Phone, Mail, MapPin, Clock } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Heart, Share2, Check, Star, Phone, Mail, MapPin, Clock, Package, Loader2 } from 'lucide-react';
 import Container from '../components/ui/Container';
 import Button from '../components/ui/Button';
-import { PRODUCTS, COMPANY_INFO } from '../constants';
+import { COMPANY_INFO } from '../constants';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
+import { supabase } from '../lib/supabase';
+import { LandingProduct } from '../hooks/useProducts';
 
 const ProductDetailPage: React.FC = () => {
-  const { productId } = useParams<{ productId: string }>();
-  const product = PRODUCTS.find(p => p.id === productId);
+  const { slug } = useParams<{ slug: string }>();
+  const [product, setProduct] = useState<LandingProduct | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   const { elementRef: heroRef, isVisible: heroVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.2 });
   const { elementRef: detailsRef, isVisible: detailsVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.2 });
   const { elementRef: specsRef, isVisible: specsVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.2 });
 
+  // Fetch product data from CMS
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!slug) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+
+        const { data, error: fetchError } = await supabase
+          .from('products')
+          .select('*')
+          .eq('slug', slug)
+          .eq('is_active', true)
+          .single();
+
+        if (fetchError) {
+          if (fetchError.code === 'PGRST116') {
+            setError('Sản phẩm không tồn tại hoặc đã bị ẩn');
+          } else {
+            throw fetchError;
+          }
+          return;
+        }
+
+        setProduct(data);
+      } catch (err) {
+        console.error('Error fetching product:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch product');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [slug]);
+
   // Scroll to top when product changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [productId]);
+  }, [slug]);
 
-  if (!product) {
+  if (loading) {
+    return (
+      <div className="min-h-screen">
+        {/* Breadcrumb skeleton */}
+        <section className="py-6 bg-gray-50">
+          <Container>
+            <div className="animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-64"></div>
+            </div>
+          </Container>
+        </section>
+
+        {/* Content skeleton */}
+        <section className="py-12 bg-white">
+          <Container>
+            <div className="grid lg:grid-cols-2 gap-12 items-start">
+              <div className="animate-pulse">
+                <div className="aspect-square rounded-2xl bg-gray-200"></div>
+              </div>
+              <div className="animate-pulse space-y-6">
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-200 rounded w-32"></div>
+                  <div className="flex gap-3">
+                    <div className="h-6 bg-gray-200 rounded w-20"></div>
+                    <div className="h-6 bg-gray-200 rounded w-24"></div>
+                  </div>
+                  <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gray-200 rounded"></div>
+                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                  </div>
+                  <div className="h-10 bg-gray-200 rounded w-48"></div>
+                </div>
+                <div className="space-y-3">
+                  <div className="h-6 bg-gray-200 rounded w-40"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gray-200 rounded"></div>
+                    <div className="h-4 bg-gray-200 rounded w-4/5"></div>
+                    <div className="h-4 bg-gray-200 rounded w-3/5"></div>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="h-12 bg-gray-200 rounded flex-1"></div>
+                  <div className="h-12 bg-gray-200 rounded flex-1"></div>
+                </div>
+              </div>
+            </div>
+          </Container>
+        </section>
+      </div>
+    );
+  }
+
+  if (error || !product) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Sản phẩm không tồn tại</h1>
-          <Link to="/products" className="text-blue-600 hover:text-blue-700">
-            ← Quay lại danh sách sản phẩm
-          </Link>
+          <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            {error || 'Sản phẩm không tồn tại'}
+          </h1>
+          <p className="text-gray-600 mb-6">
+            Sản phẩm bạn đang tìm kiếm không tồn tại hoặc đã bị ẩn.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/products">
+              <Button variant="outline" icon={<ArrowLeft className="w-4 h-4" />}>
+                Quay lại danh sách sản phẩm
+              </Button>
+            </Link>
+            <Button onClick={() => window.location.reload()} variant="primary">
+              Thử lại
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -39,6 +146,16 @@ const ProductDetailPage: React.FC = () => {
       'lab-equipment': 'Thiết bị phòng thí nghiệm'
     };
     return categoryMap[category] || category;
+  };
+
+  const getBrandName = () => {
+    if (product.specifications) {
+      return product.specifications.brand || 
+             product.specifications.Brand || 
+             product.specifications.Thương_hiệu || 
+             'Không xác định';
+    }
+    return 'Không xác định';
   };
 
   return (
@@ -69,18 +186,22 @@ const ProductDetailPage: React.FC = () => {
               {/* Product Image */}
               <div className="relative">
                 <div className="aspect-square rounded-2xl overflow-hidden bg-gray-100 sticky top-8">
-                  <img
-                    src={product.imageUrl}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
-                  {product.featured && (
-                    <div className="absolute top-4 left-4">
-                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-500 to-teal-500 text-white">
-                        Sản phẩm nổi bật
-                      </span>
+                  {product.image_url ? (
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Package className="h-16 w-16 text-gray-400" />
                     </div>
                   )}
+                  <div className="absolute top-4 left-4">
+                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-500 to-teal-500 text-white">
+                      {product.category}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -94,7 +215,7 @@ const ProductDetailPage: React.FC = () => {
                   
                   <div className="flex items-center gap-3 mb-4">
                     <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-semibold rounded-lg">
-                      {product.brand}
+                      {getBrandName()}
                     </span>
                     <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-lg">
                       {getCategoryName(product.category)}
@@ -111,7 +232,7 @@ const ProductDetailPage: React.FC = () => {
 
                   <div className="flex items-center gap-4 mb-6">
                     <div className="text-3xl font-bold text-blue-600">
-                      {product.price || 'Liên hệ để báo giá'}
+                      Liên hệ để báo giá
                     </div>
                   </div>
                 </div>
@@ -158,7 +279,7 @@ const ProductDetailPage: React.FC = () => {
       </section>
 
       {/* Technical Specifications */}
-      {product.specifications && (
+      {product.specifications && Object.keys(product.specifications).length > 0 && (
         <section className="py-16 bg-gray-50">
           <Container>
             <div 
@@ -200,112 +321,37 @@ const ProductDetailPage: React.FC = () => {
               detailsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
             }`}
           >
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Cần hỗ trợ thêm?</h2>
-              <p className="text-lg text-gray-600">Liên hệ với chúng tôi để được tư vấn chi tiết</p>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-8">
-              {/* North Region */}
-              <div className="text-center p-6 bg-blue-50 rounded-2xl">
-                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <Phone className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Miền Bắc</h3>
-                <p className="text-gray-600 mb-3">Tư vấn sản phẩm</p>
-                <p className="font-semibold text-blue-600">{COMPANY_INFO.hotlines.productConsultation.north.contact}</p>
-                <p className="text-lg font-bold text-gray-900">{COMPANY_INFO.hotlines.productConsultation.north.number}</p>
-              </div>
-
-              {/* South Region */}
-              <div className="text-center p-6 bg-green-50 rounded-2xl">
-                <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <Phone className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Miền Nam</h3>
-                <p className="text-gray-600 mb-3">Tư vấn sản phẩm</p>
-                <p className="font-semibold text-green-600">{COMPANY_INFO.hotlines.productConsultation.south.contact}</p>
-                <p className="text-lg font-bold text-gray-900">{COMPANY_INFO.hotlines.productConsultation.south.number}</p>
-              </div>
-
-              {/* Investment */}
-              <div className="text-center p-6 bg-purple-50 rounded-2xl">
-                <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <Phone className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Đầu tư</h3>
-                <p className="text-gray-600 mb-3">Tư vấn đầu tư</p>
-                <p className="font-semibold text-purple-600">{COMPANY_INFO.hotlines.investment.national.contact}</p>
-                <p className="text-lg font-bold text-gray-900">{COMPANY_INFO.hotlines.investment.national.number}</p>
-              </div>
-            </div>
-
-            <div className="text-center mt-8">
-              <div className="flex items-center justify-center gap-6 text-gray-600">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-5 h-5" />
-                  <span>{COMPANY_INFO.address}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
-                  <span>{COMPANY_INFO.workingHours}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Container>
-      </section>
-
-      {/* Related Products */}
-      <section className="py-16 bg-gray-50">
-        <Container>
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Sản phẩm liên quan</h2>
-            <p className="text-lg text-gray-600">Các sản phẩm khác cùng danh mục</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {PRODUCTS
-              .filter(p => p.category === product.category && p.id !== product.id)
-              .slice(0, 3)
-              .map((relatedProduct, index) => (
-                <Link
-                  key={relatedProduct.id}
-                  to={`/products/${relatedProduct.id}`}
-                  className="group block bg-white rounded-2xl overflow-hidden shadow-soft hover:shadow-large transition-all duration-300 transform hover:-translate-y-1"
-                >
-                  <div className="aspect-video overflow-hidden">
-                    <img
-                      src={relatedProduct.imageUrl}
-                      alt={relatedProduct.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+            <div className="bg-gradient-to-br from-blue-50 to-teal-50 rounded-3xl p-8 lg:p-12">
+              <div className="grid lg:grid-cols-2 gap-8 items-center">
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                    Cần tư vấn thêm về sản phẩm?
+                  </h2>
+                  <p className="text-lg text-gray-600 mb-6">
+                    Đội ngũ chuyên gia của chúng tôi sẵn sàng tư vấn chi tiết về sản phẩm 
+                    và hỗ trợ bạn đưa ra quyết định phù hợp.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Button variant="primary" size="lg" icon={<Phone className="w-5 h-5" />}>
+                      Gọi ngay: {COMPANY_INFO.phone}
+                    </Button>
+                    <Button variant="outline" size="lg" icon={<Mail className="w-5 h-5" />}>
+                      Email: {COMPANY_INFO.email}
+                    </Button>
                   </div>
-                  <div className="p-6">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded">
-                        {relatedProduct.brand}
-                      </span>
+                </div>
+                <div className="text-center lg:text-right">
+                  <div className="inline-block p-8 bg-white rounded-2xl shadow-soft">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-teal-500 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+                      <Phone className="w-8 h-8 text-white" />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                      {relatedProduct.name}
-                    </h3>
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                      {relatedProduct.description}
-                    </p>
-                    <div className="text-lg font-bold text-blue-600">
-                      {relatedProduct.price || 'Liên hệ'}
-                    </div>
+                    <div className="text-sm text-gray-600 mb-1">Hotline 24/7</div>
+                    <div className="text-2xl font-bold text-gray-900">{COMPANY_INFO.phone}</div>
                   </div>
-                </Link>
-              ))}
-          </div>
-
-          {PRODUCTS.filter(p => p.category === product.category && p.id !== product.id).length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-600">Không có sản phẩm liên quan</p>
+                </div>
+              </div>
             </div>
-          )}
+          </div>
         </Container>
       </section>
     </div>
