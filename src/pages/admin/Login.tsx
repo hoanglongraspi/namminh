@@ -147,13 +147,7 @@ const AdminLogin: React.FC = () => {
         </div>
 
         {/* Demo Credentials */}
-        <div className="mt-6 bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/30">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Demo Credentials:</h3>
-          <div className="text-xs text-gray-600 space-y-1">
-            <p><span className="font-medium">Username:</span> namminhmed</p>
-            <p><span className="font-medium">Password:</span> namminhmed25@</p>
-          </div>
-        </div>
+        
       </div>
     </div>
   );
