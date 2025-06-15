@@ -45,7 +45,6 @@ const NewsDetailPage: React.FC = () => {
         }
 
         setNewsArticle(data);
-        console.log('Loaded news article:', data); // Debug log
         
         // Update view count
         await supabase
@@ -315,13 +314,13 @@ const NewsDetailPage: React.FC = () => {
                 {newsArticle.content ? (
                   <div className="article-content">
                     {/* Debug info */}
-                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm">
+                    {/* <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm">
                       <strong>Debug Info:</strong> Content length: {newsArticle.content.length} characters
                       <br />
                       <strong>First 100 chars:</strong> {newsArticle.content.substring(0, 100)}...
                       <br />
                       <strong>Contains HTML:</strong> {newsArticle.content.includes('<') ? 'Yes' : 'No'}
-                    </div>
+                    </div> */}
                     
                     {/* Simple content rendering */}
                     <div className="content-body text-gray-800 text-lg leading-relaxed">
